@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF Text Extractor</title>
+  <style>
+    #statusBar {
+      display: none;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF Text Extractor</h1>
+  <input type="file" id="fileInput" accept=".pdf">
+  <button id="extractButton">Extrahera text</button>
+  <button id="copyButton" style="display: none;">Kopiera till urklipp</button>
+  <div id="statusBar">Genererar text...</div>
+  <div id="resultText"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.281/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.4.0/tesseract.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const extractButton = document.getElementById('extractButton');
+    const copyButton = document.getElementById('copyButton');
+    const resultText = document.getElementById('resultText');
+    const statusBar = document.getElementById('statusBar');
+
+    fileInput.addEventListener('change', async (event) => {
+      const pdfFile = event.target.files[0];
+      const fileReader = new FileReader();
+
+      fileReader.onload = async (e) => {
+        const arrayBuffer = e.target.result;
+        const typedArray = new Uint8Array(arrayBuffer);
+        const pdfData = await pdfjs.getDocument({ data: typedArray }).promise;
+        const numPages = pdfData.numPages;
+        let fullText = '';
+
+        for (let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
+          const page = await pdfData.getPage(pageNumber);
+          const pageText = await page.getTextContent();
+          const pageTextArray = pageText.items.map(item => item.str);
+          fullText += pageTextArray.join(' ');
+        }
+
+        resultText.textContent = fullText;
+        statusBar.style.display = 'none';
+        copyButton.style.display = 'inline';
+      };
+
+      statusBar.style.display = 'block';
+      resultText.textContent = '';
+      copyButton.style.display = 'none';
+
+      fileReader.readAsArrayBuffer(pdfFile);
+    });
+
+    copyButton.addEventListener('click', () => {
+      const pdfText = resultText.textContent;
+      const textArea = document.createElement('textarea');
+      textArea.value = pdfText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    });
+  </script>
+</body>
+</html>
