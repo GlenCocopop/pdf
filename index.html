@@ -47,11 +47,13 @@
         resultText.textContent = fullText;
         statusBar.style.display = 'none';
         copyButton.style.display = 'inline';
+        updateStatus('Text genererad.');
       };
 
       statusBar.style.display = 'block';
       resultText.textContent = '';
       copyButton.style.display = 'none';
+      updateStatus('Genererar text...');
 
       fileReader.readAsArrayBuffer(pdfFile);
     });
@@ -65,6 +67,10 @@
       document.execCommand('copy');
       document.body.removeChild(textArea);
     });
+
+    function updateStatus(status) {
+      statusBar.textContent = status;
+    }
   </script>
 </body>
 </html>
